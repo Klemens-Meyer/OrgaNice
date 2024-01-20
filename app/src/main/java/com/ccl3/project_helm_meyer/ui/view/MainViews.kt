@@ -20,6 +20,7 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
@@ -32,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,11 +66,14 @@ sealed class Screen(val route: String){
     object Second: Screen("second")
     object Third: Screen("third")
     object SpecificProject: Screen("specificProject")
+    object AddingPage: Screen("addingPage")
+    object EditPage: Screen("editPage")
 }
 
 @Composable
 fun MainView(mainViewModel: MainViewModel){
     val state = mainViewModel.mainViewState.collectAsState()
+    val assState = mainViewModel.assignmentState.collectAsState()
     val navController = rememberNavController()
     Scaffold(
         bottomBar = {BottomNavigationBar(navController, state.value.selectedScreen)}
@@ -91,12 +96,26 @@ fun MainView(mainViewModel: MainViewModel){
             composable(Screen.Third.route){
                 mainViewModel.selectScreen(Screen.Third)
                 mainViewModel.getAssignments()
-                displayAssignments(mainViewModel)
+                displayAssignments(mainViewModel, navController)
             }
             composable(Screen.SpecificProject.route){
                 mainViewModel.selectScreen(Screen.SpecificProject)
                 mainViewModel.getSpecificProject()
                 displaySpecificProject(mainViewModel)
+            }
+            composable(Screen.AddingPage.route){
+                mainViewModel.selectScreen(Screen.AddingPage)
+                //mainViewModel.getSpecificProject()
+                mainViewModel.getProjects()
+                displayAddingPage(mainViewModel)
+            }
+            composable(Screen.EditPage.route){
+                mainViewModel.selectScreen(Screen.EditPage)
+                //mainViewModel.getSpecificProject()
+                //if(entweder assignment, note, exam) bla bla maybe
+                mainViewModel.getOneAssignment(assState.value.id)
+
+                displayEditPage(mainViewModel)
             }
         }
     }
@@ -276,7 +295,7 @@ fun mainScreen(mainViewModel: MainViewModel){
 
 
 @Composable
-fun displayAssignments(mainViewModel: MainViewModel){
+fun displayAssignments(mainViewModel: MainViewModel, navController: NavHostController){
     val state = mainViewModel.mainViewState.collectAsState()
 
     LazyColumn (
@@ -288,13 +307,27 @@ fun displayAssignments(mainViewModel: MainViewModel){
             Spacer(modifier = Modifier.height(60.dp))
 
             Text(text = "Current Assignments:",fontSize = 40.sp, fontWeight = FontWeight.Bold, style = TextStyle(fontFamily = FontFamily.Cursive))
+            IconButton(
+                onClick = {
+                    mainViewModel.setCurrentAdding("Assignment")
+                    navController.navigate(Screen.AddingPage.route)
+                }
+                //HIER mal probienen ob AddingPage lädt
+                //onClick = { confirmDelete() }
+            ) {
+                Icon(Icons.Default.Add,"Add Ass")
+            }
         }
 
         items(state.value.assignments){
             Row(modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
-                .clickable { mainViewModel.editAssignment(it) }
+                .clickable {
+                    mainViewModel.setCurrentEdit("Assignment")
+                    mainViewModel.editAssignment(it)
+                    navController.navigate(Screen.EditPage.route)
+                }
             ){
                 Column (modifier = Modifier.weight(1f)) {
                     Text(text = "${it.projectName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -304,6 +337,7 @@ fun displayAssignments(mainViewModel: MainViewModel){
                 }
                 IconButton(
                     onClick = { mainViewModel.deleteButton(it)}
+
                     //onClick = { confirmDelete() }
                 ) {
                     Icon(Icons.Default.Delete,"Delete")
@@ -467,4 +501,336 @@ fun displaySpecificProject(mainViewModel: MainViewModel){
         }
     }
 
+}
+
+@Composable
+fun displayAddingPage(mainViewModel: MainViewModel){
+    val state = mainViewModel.mainViewState.collectAsState()
+    var projectName by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
+    var assignmentName by remember { mutableStateOf(TextFieldValue("")) }
+    var assignmentDesc by remember { mutableStateOf(TextFieldValue("")) }
+    var daysLeft by remember { mutableStateOf(TextFieldValue("")) }
+    var noteName by remember { mutableStateOf(TextFieldValue("")) }
+    var noteDesc by remember { mutableStateOf(TextFieldValue("")) }
+    var examName by remember { mutableStateOf(TextFieldValue("")) }
+    var examDate by remember { mutableStateOf(TextFieldValue("")) }
+
+
+
+    val context = LocalContext.current
+    //Log.d("In IFFFF", state.value.projects.toString())
+    var checkii: Boolean = false
+
+
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Create your ${state.value.currentAdding}", fontSize = 36.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        TextField(
+            value = projectName,
+            onValueChange = { newText ->
+                projectName = newText
+            },
+            label = { Text(text = "Projc Name") }
+        )
+
+        if(state.value.currentAdding == "Assignment") {
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = assignmentName,
+                onValueChange = { newText ->
+                    assignmentName = newText
+                },
+                label = { Text(text = "ass Name") }
+            )
+
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = assignmentDesc,
+                onValueChange = { newText ->
+                    assignmentDesc = newText
+                },
+                label = { Text(text = "Assignment Description") }
+            )
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = daysLeft,
+                onValueChange = { newText ->
+                    daysLeft = newText
+                },
+                label = { Text(text = "Days left to Deadline") }
+            )
+        }else if(state.value.currentAdding == "Note"){
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = noteName,
+                onValueChange = {
+                        newText -> noteName = newText
+                },
+                label = { Text(text = "NoteName") }
+            )
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = noteDesc,
+                onValueChange = {
+                        newText -> noteDesc = newText
+                },
+                label = { Text(text = "NoteDesc") }
+            )
+        }else if(state.value.currentAdding == "Exam") {
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = examName,
+                onValueChange = { newText ->
+                    examName = newText
+                },
+                label = { Text(text = "ExamName") }
+            )
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = examDate,
+                onValueChange = { newText ->
+                    examDate = newText
+                },
+                label = { Text(text = "ExamDate") }
+            )
+        }
+
+        Button(
+            onClick = {
+                if(state.value.currentAdding == "Assignment"){
+                    if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()){
+                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+                    }else{
+                        if(daysLeft.text.toIntOrNull()!=null){
+                            for(projectInTable in state.value.projects){
+                                if(projectInTable.projectName == projectName.text){
+                                    checkii = true
+                                    break
+                                }else{
+                                    checkii = false
+                                }
+                            }
+                            if(!checkii){
+                                mainViewModel.saveProject(Project(projectName.text))
+                            }
+
+                            mainViewModel.saveAssignment(Assignment(projectName.text, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
+
+                            Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+
+                        }else{
+                            Toast.makeText(context,"make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }else if(state.value.currentAdding == "Note"){
+                    if(noteName.text.isNullOrEmpty() || noteDesc.text.isNullOrEmpty()){
+                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                    }else{
+                        mainViewModel.saveNote(Note(projectName.text, noteName.text, noteDesc.text))
+                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                    }
+                }else if(state.value.currentAdding == "Exam"){
+                    if(examName.text.isNullOrEmpty() || examDate.text.isNullOrEmpty()){
+                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                    }else{
+                        mainViewModel.saveExam(Exam(projectName.text, examName.text, examDate.text))
+                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+            },
+            modifier = Modifier.padding(top = 20.dp)
+        ) {
+            Text(text = "Save", fontSize = 20.sp)
+        }
+    }
+}
+
+@Composable
+fun displayEditPage(mainViewModel: MainViewModel){
+    var projectName by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
+    var assignmentName by remember { mutableStateOf(TextFieldValue("")) }
+    var assignmentDesc by remember { mutableStateOf(TextFieldValue("")) }
+    var daysLeft by remember { mutableStateOf(TextFieldValue("")) }
+    var noteName by remember { mutableStateOf(TextFieldValue("")) }
+    var noteDesc by remember { mutableStateOf(TextFieldValue("")) }
+    var examName by remember { mutableStateOf(TextFieldValue("")) }
+    var examDate by remember { mutableStateOf(TextFieldValue("")) }
+
+    val state = mainViewModel.mainViewState.collectAsState()
+    val assState = mainViewModel.assignmentState.collectAsState()
+    val context = LocalContext.current
+    Log.d("In IFFFF", state.value.projects.toString())
+    var checkii: Boolean = false
+
+    var placeholderTest = ""
+
+    /* if(state.value.assignments.getOrNull(0)?.assignmentName.isNullOrEmpty()){
+        //bla
+    }else{
+        //assignmentName = TextFieldValue(state.value.assignments.get(0).assignmentName)
+        LaunchedEffect(Unit) {
+            //assignmentName = TextFieldValue(state.value.assignments.get(0).assignmentName)
+            assignmentName = TextFieldValue(assState.value.assignmentName)
+
+        }
+    } */
+
+    LaunchedEffect(Unit) {
+        //assignmentName = TextFieldValue(state.value.assignments.get(0).assignmentName)
+        assignmentName = TextFieldValue(assState.value.assignmentName)
+
+    }
+
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Edit your ${state.value.currentEdit}", fontSize = 36.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        TextField(
+            value = projectName,
+            onValueChange = { newText ->
+                projectName = newText
+            },
+            label = { Text(text = "Projc Name") }
+        )
+
+        if(state.value.currentEdit == "Assignment") {
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = assignmentName,
+                onValueChange = { newText ->
+                    assignmentName = newText
+                },
+                label = { Text(text = "ass Name") },
+
+            )
+
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = assignmentDesc,
+                onValueChange = { newText ->
+                    assignmentDesc = newText
+                },
+                label = { Text(text = "Assignment Description") }
+            )
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = daysLeft,
+                onValueChange = { newText ->
+                    daysLeft = newText
+                },
+                label = { Text(text = "Days left to Deadline") }
+            )
+        }else if(state.value.currentEdit == "Note"){
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = noteName,
+                onValueChange = {
+                        newText -> noteName = newText
+                },
+                label = { Text(text = "NoteName") }
+            )
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = noteDesc,
+                onValueChange = {
+                        newText -> noteDesc = newText
+                },
+                label = { Text(text = "NoteDesc") }
+            )
+        }else if(state.value.currentEdit == "Exam") {
+
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = examName,
+                onValueChange = { newText ->
+                    examName = newText
+                },
+                label = { Text(text = "ExamName") }
+            )
+            TextField(
+                modifier = Modifier.padding(top = 12.dp),
+                value = examDate,
+                onValueChange = { newText ->
+                    examDate = newText
+                },
+                label = { Text(text = "ExamDate") }
+            )
+        }
+
+        Button(
+            onClick = {
+                if(state.value.currentEdit == "Assignment"){
+                    if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()){
+                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+                    }else{
+                        if(daysLeft.text.toIntOrNull()!=null){
+                            for(projectInTable in state.value.projects){
+                                if(projectInTable.projectName == projectName.text){
+                                    checkii = true
+                                    break
+                                }else{
+                                    checkii = false
+                                }
+                            }
+                            if(!checkii){
+                                mainViewModel.saveProject(Project(projectName.text))
+                            }
+
+                            mainViewModel.saveAssignment(Assignment(projectName.text, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
+
+                            Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+
+                        }else{
+                            Toast.makeText(context,"make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }else if(state.value.currentEdit == "Note"){
+                    if(noteName.text.isNullOrEmpty() || noteDesc.text.isNullOrEmpty()){
+                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                    }else{
+                        mainViewModel.saveNote(Note(projectName.text, noteName.text, noteDesc.text))
+                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                    }
+                }else if(state.value.currentEdit == "Exam"){
+                    if(examName.text.isNullOrEmpty() || examDate.text.isNullOrEmpty()){
+                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                    }else{
+                        mainViewModel.saveExam(Exam(projectName.text, examName.text, examDate.text))
+                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+            },
+            modifier = Modifier.padding(top = 20.dp)
+        ) {
+            Text(text = "Save", fontSize = 20.sp)
+        }
+    }
 }

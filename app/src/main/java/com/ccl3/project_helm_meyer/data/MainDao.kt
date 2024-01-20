@@ -34,11 +34,24 @@ interface MainDao {
     @Update
     suspend fun updateProject(project: Project)
 
+    @Update
+    suspend fun updateNote(note: Note)
+
+    @Update
+    suspend fun updateExam(exam: Exam)
+
     @Delete
     suspend fun deleteAssignment(assignment: Assignment)
 
     @Delete
     suspend fun deleteProject(project: Project)
+
+    @Delete
+    suspend fun deleteNote(note: Note)
+
+    @Delete
+    suspend fun deleteExam(exam: Exam)
+
 
 
     @Query("SELECT * FROM assignments")
@@ -52,6 +65,9 @@ interface MainDao {
 
     @Query("SELECT * FROM exams")
     fun getExams(): Flow<List<Exam>>
+
+    @Query("SELECT * FROM assignments WHERE id IS (:assID)")
+    fun getOneAssignment(assID: Int): Flow<List<Assignment>>
 
     @Transaction
     @Query("SELECT * FROM projects WHERE projectName IS (:projectN)")

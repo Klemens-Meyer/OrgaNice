@@ -52,10 +52,29 @@ class MainViewModel(private val dao: MainDao): ViewModel() {
             }
         }
     }
+    fun getOneAssignment(assID: Int){
+        viewModelScope.launch {
+            dao.getOneAssignment(assID).collect(){ allAssignments ->
+                //_mainViewState.update { it.copy(assignments = allAssignments) }
+                _mainViewState.update { it.copy(assignments = allAssignments) }
+                _assignmentState.value = allAssignments[0]
+            }
+        }
+    }
 
     fun editAssignment(assignment: Assignment){
         _assignmentState.value = assignment
-        _mainViewState.update { it.copy(openDialog = true) }
+        //_mainViewState.update { it.copy(openDialog = true) }
+    }
+
+    fun editNote(note: Note){
+        _noteState.value = note
+        //_mainViewState.update { it.copy(openDialog = true) }
+    }
+
+    fun editExam(exam: Exam){
+        _examState.value = exam
+        //_mainViewState.update { it.copy(openDialog = true) }
     }
 
     fun updateAssignment(assignment: Assignment){
@@ -178,4 +197,12 @@ class MainViewModel(private val dao: MainDao): ViewModel() {
         }
     }
 
+    fun setCurrentAdding(string: String){
+        _mainViewState.update { it.copy(currentAdding = string) }
+    }
+
+
+    fun setCurrentEdit(string: String){
+        _mainViewState.update { it.copy(currentEdit = string) }
+    }
 }
