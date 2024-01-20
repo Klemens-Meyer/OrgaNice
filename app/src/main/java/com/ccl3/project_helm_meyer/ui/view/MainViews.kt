@@ -3,6 +3,7 @@ package com.ccl3.project_helm_meyer.ui.view
 import android.widget.Toast
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,21 +13,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomNavigation
+import androidx.compose.material.Card
+import androidx.compose.material.FabPosition
+import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -42,6 +53,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -101,13 +113,13 @@ fun MainView(mainViewModel: MainViewModel){
             composable(Screen.SpecificProject.route){
                 mainViewModel.selectScreen(Screen.SpecificProject)
                 mainViewModel.getSpecificProject()
-                displaySpecificProject(mainViewModel)
+                displaySpecificProject(mainViewModel, navController)
             }
             composable(Screen.AddingPage.route){
                 mainViewModel.selectScreen(Screen.AddingPage)
                 //mainViewModel.getSpecificProject()
                 mainViewModel.getProjects()
-                displayAddingPage(mainViewModel)
+                displayAddingPage(mainViewModel, navController)
             }
             composable(Screen.EditPage.route){
                 mainViewModel.selectScreen(Screen.EditPage)
@@ -115,7 +127,7 @@ fun MainView(mainViewModel: MainViewModel){
                 //if(entweder assignment, note, exam) bla bla maybe
                 mainViewModel.getOneAssignment(assState.value.id)
 
-                displayEditPage(mainViewModel)
+                displayEditPage(mainViewModel, navController)
             }
         }
     }
@@ -298,213 +310,304 @@ fun mainScreen(mainViewModel: MainViewModel){
 fun displayAssignments(mainViewModel: MainViewModel, navController: NavHostController){
     val state = mainViewModel.mainViewState.collectAsState()
 
-    LazyColumn (
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        item{
-            Spacer(modifier = Modifier.height(60.dp))
-
-            Text(text = "Current Assignments:",fontSize = 40.sp, fontWeight = FontWeight.Bold, style = TextStyle(fontFamily = FontFamily.Cursive))
-            IconButton(
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
                 onClick = {
                     mainViewModel.setCurrentAdding("Assignment")
                     navController.navigate(Screen.AddingPage.route)
-                }
-                //HIER mal probienen ob AddingPage lädt
-                //onClick = { confirmDelete() }
+                },
+                backgroundColor = MaterialTheme.colorScheme.secondary
             ) {
-                Icon(Icons.Default.Add,"Add Ass")
+                Icon(Icons.Default.Add,"Add Assignment")
+            }
+        },
+        content = { paddingValues ->
+            LazyColumn (
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(60.dp))
+                    Text(
+                        text = "Current Assignments:",
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(fontFamily = FontFamily.Cursive)
+                    )
+                }
+
+                items(state.value.assignments) { assignment ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable {
+                                mainViewModel.setCurrentEdit("Assignment")
+                                mainViewModel.editAssignment(assignment)
+                                navController.navigate(Screen.EditPage.route)
+                            },
+                        elevation = 4.dp
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = "Assignment",
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = assignment.assignmentName,
+                                    style = MaterialTheme.typography.headlineSmall
+                                )
+                                Text(
+                                    text = assignment.projectName,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                            Text(
+                                text = "${assignment.daysLeft} days left",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                            IconButton(
+                                onClick = { mainViewModel.deleteButton(assignment) }
+                            ) {
+                                Icon(Icons.Default.Delete, "Delete")
+                            }
+                        }
+                    }
+                }
             }
         }
-
-        items(state.value.assignments){
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .clickable {
-                    mainViewModel.setCurrentEdit("Assignment")
-                    mainViewModel.editAssignment(it)
-                    navController.navigate(Screen.EditPage.route)
-                }
-            ){
-                Column (modifier = Modifier.weight(1f)) {
-                    Text(text = "${it.projectName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text(text = "Name: ${it.assignmentName}")
-                    Text(text = "Description: ${it.assignmentDesc}")
-                    Text(text = "Days Left: ${it.daysLeft}")
-                }
-                IconButton(
-                    onClick = { mainViewModel.deleteButton(it)}
-
-                    //onClick = { confirmDelete() }
-                ) {
-                    Icon(Icons.Default.Delete,"Delete")
-                }
-            }
-        }
-    }
-    //Column {
-        //editAssignmentModal(mainViewModel)
-    //}
+    )
 }
+
 
 @Composable
 fun displayProjects(mainViewModel: MainViewModel, navController: NavHostController){
     val state = mainViewModel.mainViewState.collectAsState()
-    //val state1 = mainViewModel.mainViewState.collectAsState()
-    Log.d("Hier stehts", state.value.projectsWithAssignmentsAndNotesAndExams.toString())
 
-
-    LazyColumn (
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        item{
-            Spacer(modifier = Modifier.height(60.dp))
-
-            Text(text = "Your Projects:",fontSize = 40.sp, fontWeight = FontWeight.Bold, style = TextStyle(fontFamily = FontFamily.Cursive))
-        }
-
-        items(state.value.projectsWithAssignmentsAndNotesAndExams){
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .clickable {
-                    Log.d("In Clicky", it.project.toString())
-                    mainViewModel.setSpecificProject(it.project)
-                    navController.navigate(Screen.SpecificProject.route)
-
+    Scaffold(
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                text = { Text("Add Project") },
+                onClick = {
+                    // Define the action for adding a new project
+                },
+                icon = {
+                    Icon(Icons.Default.Add, contentDescription = "Add Project")
+                },
+            )
+        },
+        content = { paddingValues ->
+            LazyColumn (
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(60.dp))
+                    Text(
+                        text = "Your Projects:",
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        style = TextStyle(fontFamily = FontFamily.Cursive)
+                    )
+                    // Add your filters UI here
                 }
-            ){
-                Column (modifier = Modifier.weight(1f)) {
-                    Text(text = "${it.project.projectName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    //Text(text = "Name: ${it.assignments[0].assignmentName}")
-                    //Text(text = "Name: ${it.assignments[1].assignmentName}")
-                    Text(text = "AssLength: ${it.assignments.size}")
-                    Text(text = "AssLength: ${it.notes.size}")
-                    Text(text = "AssLength: ${it.exams.size}")
 
+                items(state.value.projectsWithAssignmentsAndNotesAndExams) { projectInfo ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable {
+                                mainViewModel.setSpecificProject(projectInfo.project)
+                                navController.navigate(Screen.SpecificProject.route)
+                            },
+                        elevation = 4.dp
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Project",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = projectInfo.project.projectName,
+                                    style = MaterialTheme.typography.headlineSmall
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                //Text(
+                                //    text = projectInfo.project.daysLeft.toString(),
+                                //    style = MaterialTheme.typography.bodySmall
+                                //)
+                                Row {
+                                    Icon(Icons.Default.Call, contentDescription = "Assignments")
+                                    Text(text = "${projectInfo.assignments.size}")
+                                    Icon(Icons.Default.Build, contentDescription = "Notes")
+                                    Text(text = "${projectInfo.notes.size}")
+                                    Icon(Icons.Default.AccountBox, contentDescription = "Exams")
+                                    Text(text = "${projectInfo.exams.size}")
+                                }
+                            }
+                        }
+                    }
                 }
-                /*IconButton(
-                    onClick = { mainViewModel.deleteButton(it)}
-                    //onClick = { confirmDelete() }
-                ) {
-                    Icon(Icons.Default.Delete,"Delete")
-                }*/
             }
         }
-    }
-
+    )
 }
 
 
+
 @Composable
-fun displaySpecificProject(mainViewModel: MainViewModel){
+fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostController) {
     val state = mainViewModel.mainViewState.collectAsState()
 
-    Log.d("Hierrrrrrrrrrrrrrrrr", state.value.specificProject.toString())
-    Log.d("Hierrrrrrr", state.value.specificProject.size.toString())
-    Log.d("Hierrr", state.value.specificProject.getOrNull(0).toString())
-
-
-
-
-    LazyColumn (
+    LazyColumn(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
-        item{
+        item {
             Spacer(modifier = Modifier.height(60.dp))
-
-            Text(text = "Project: ${state.value.specificProject.getOrNull(0)?.project?.projectName}",fontSize = 40.sp, fontWeight = FontWeight.Bold, style = TextStyle(fontFamily = FontFamily.Cursive))
+            Text(
+                text = "Project: ${state.value.specificProject.getOrNull(0)?.project?.projectName}",
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold,
+                style = TextStyle(fontFamily = FontFamily.Cursive)
+            )
         }
 
-        state.value.specificProject.getOrNull(0)?.let {
-            items(it.assignments){
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-                    //.clickable { mainViewModel.editAssignment(it) }
-                ){
-                    Column (modifier = Modifier.weight(1f)) {
-                        Text(text = "${it.projectName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        //Text(text = "Name: ${it.assignments[0].assignmentName}")
-                        //Text(text = "Name: ${it.assignments[1].assignmentName}")
-                        Text(text = "Ass: ${it.assignmentName}")
-                        //Text(text = "Note: ${it.notes[0].noteName}")
-                        //Text(text = "Ex: ${it.exams[0].examName}")
-
+        //Assignments
+        state.value.specificProject.getOrNull(0)?.assignments?.let { assignments ->
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Assignments",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(onClick = {
+                        mainViewModel.setCurrentAdding("Assignment")
+                        navController.navigate(Screen.AddingPage.route)
+                    }) {
+                        Text("Add Assignment")
                     }
-                    /*IconButton(
-                            onClick = { mainViewModel.deleteButton(it)}
-                            //onClick = { confirmDelete() }
-                        ) {
-                            Icon(Icons.Default.Delete,"Delete")
-                        }*/
+                }
+            }
+            items(assignments) { assignment ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                        .border(1.dp, Color.Gray)
+                        .clickable {
+                            mainViewModel.setCurrentEdit("Assignment")
+                            mainViewModel.editAssignment(assignment)
+                            navController.navigate(Screen.EditPage.route)
+                        },
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "${assignment.assignmentName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Due in: ${assignment.daysLeft} Days")
+                    }
                 }
             }
         }
 
-        state.value.specificProject.getOrNull(0)?.let {
-            items(it.notes){
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-                    //.clickable { mainViewModel.editAssignment(it) }
-                ){
-                    Column (modifier = Modifier.weight(1f)) {
-                        Text(text = "${it.projectName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        //Text(text = "Name: ${it.assignments[0].assignmentName}")
-                        //Text(text = "Name: ${it.assignments[1].assignmentName}")
-                        Text(text = "Ass: ${it.noteName}")
-                        //Text(text = "Note: ${it.notes[0].noteName}")
-                        //Text(text = "Ex: ${it.exams[0].examName}")
-
+        //Notes
+        state.value.specificProject.getOrNull(0)?.notes?.let { notes ->
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Notes",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(onClick = { /* TODO: Add action */ }) {
+                        Text("Add Note")
                     }
-                    /*IconButton(
-                            onClick = { mainViewModel.deleteButton(it)}
-                            //onClick = { confirmDelete() }
-                        ) {
-                            Icon(Icons.Default.Delete,"Delete")
-                        }*/
                 }
             }
-        }
-        state.value.specificProject.getOrNull(0)?.let {
-            items(it.exams){
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-                    //.clickable { mainViewModel.editAssignment(it) }
-                ){
-                    Column (modifier = Modifier.weight(1f)) {
-                        Text(text = "${it.projectName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        //Text(text = "Name: ${it.assignments[0].assignmentName}")
-                        //Text(text = "Name: ${it.assignments[1].assignmentName}")
-                        Text(text = "Ass: ${it.examName}")
-                        //Text(text = "Note: ${it.notes[0].noteName}")
-                        //Text(text = "Ex: ${it.exams[0].examName}")
-
+            items(notes) { note ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                            .border(1.dp, Color.Gray)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = "Note: ${note.noteName}")
+                        }
                     }
-                    /*IconButton(
-                            onClick = { mainViewModel.deleteButton(it)}
-                            //onClick = { confirmDelete() }
-                        ) {
-                            Icon(Icons.Default.Delete,"Delete")
-                        }*/
+            }
+        }
+
+        //Exams
+        state.value.specificProject.getOrNull(0)?.exams?.let { exams ->
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Exams",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(onClick = { /* TODO: Add action */ }) {
+                        Text("Add Exam")
+                    }
                 }
+            }
+            items(exams) { exam ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                            .border(1.dp, Color.Gray)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = "Exam: ${exam.examName}")
+                        }
+                    }
             }
         }
     }
-
 }
 
+
 @Composable
-fun displayAddingPage(mainViewModel: MainViewModel){
+fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostController){
     val state = mainViewModel.mainViewState.collectAsState()
     var projectName by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
     var assignmentName by remember { mutableStateOf(TextFieldValue("")) }
@@ -529,6 +632,11 @@ fun displayAddingPage(mainViewModel: MainViewModel){
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        IconButton(onClick = { navController.navigateUp() }) {
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
+        }
+
         Text(text = "Create your ${state.value.currentAdding}", fontSize = 36.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -661,7 +769,7 @@ fun displayAddingPage(mainViewModel: MainViewModel){
 }
 
 @Composable
-fun displayEditPage(mainViewModel: MainViewModel){
+fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostController){
     var projectName by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
     var assignmentName by remember { mutableStateOf(TextFieldValue("")) }
     var assignmentDesc by remember { mutableStateOf(TextFieldValue("")) }
@@ -703,6 +811,11 @@ fun displayEditPage(mainViewModel: MainViewModel){
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        IconButton(onClick = { navController.navigateUp() }) {
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
+        }
+
         Text(text = "Edit your ${state.value.currentEdit}", fontSize = 36.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -806,7 +919,7 @@ fun displayEditPage(mainViewModel: MainViewModel){
                             Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
 
                         }else{
-                            Toast.makeText(context,"make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context,"Make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
                         }
                     }
                 }else if(state.value.currentEdit == "Note"){
