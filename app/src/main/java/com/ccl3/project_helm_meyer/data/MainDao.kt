@@ -10,12 +10,16 @@ import com.ccl3.project_helm_meyer.data.model.Assignment
 import com.ccl3.project_helm_meyer.data.model.Exam
 import com.ccl3.project_helm_meyer.data.model.Note
 import com.ccl3.project_helm_meyer.data.model.Project
+import com.ccl3.project_helm_meyer.data.model.Username
 import com.ccl3.project_helm_meyer.data.model.relations.ProjectWithAssignmentsAndNotesAndExams
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Dao
 interface MainDao {
+
+    @Insert
+    suspend fun insertUsername(username: Username)
     @Insert
     suspend fun insertAssignment(assignment: Assignment)
 
@@ -56,6 +60,9 @@ interface MainDao {
 
     @Query("SELECT * FROM assignments")
     fun getAssignments(): Flow<List<Assignment>>
+
+    @Query("SELECT * FROM username")
+    fun getUsernames(): Flow<List<Username>>
 
     @Query("SELECT * FROM projects")
     fun getProjects(): Flow<List<Project>>

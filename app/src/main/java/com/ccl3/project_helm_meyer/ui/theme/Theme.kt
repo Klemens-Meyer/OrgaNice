@@ -16,9 +16,16 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-        primary = Purple80,
-        secondary = PurpleGrey80,
-        tertiary = Pink80
+        //primary = Purple80,
+        primary = MainColor,
+        //secondary = PurpleGrey80,
+        secondary = SecondColor,
+        //tertiary = Pink80,
+        background = BackgroundColor,
+        onPrimary = TextColor,
+        onSecondary = SecondTextColor,
+        onError = TestColor
+
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -51,7 +58,7 @@ fun MyApplicationTheme(
         }
 
         darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        else -> DarkColorScheme
     }
     val view = LocalView.current
     if (!view.isInEditMode) {

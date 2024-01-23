@@ -8,6 +8,7 @@ import com.ccl3.project_helm_meyer.data.model.Assignment
 import com.ccl3.project_helm_meyer.data.model.Exam
 import com.ccl3.project_helm_meyer.data.model.Note
 import com.ccl3.project_helm_meyer.data.model.Project
+import com.ccl3.project_helm_meyer.data.model.Username
 import com.ccl3.project_helm_meyer.ui.MainViewState
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,10 +30,30 @@ class MainViewModel(private val dao: MainDao): ViewModel() {
     private val _examState = MutableStateFlow(Exam("", "", ""))
     val examState: StateFlow<Exam> = _examState.asStateFlow()
 
+    private val _usernameState = MutableStateFlow(Username("", 0))
+    val usernameState: StateFlow<Username> = _usernameState.asStateFlow()
+
 
     private val _mainViewState = MutableStateFlow(MainViewState())
     val mainViewState: StateFlow<MainViewState> = _mainViewState.asStateFlow()
 
+
+
+    fun saveUsername(username: Username){
+        viewModelScope.launch {
+            dao.insertUsername(username)
+        }
+        _usernameState.value = username
+    }
+
+    fun getUsernames(){
+        viewModelScope.launch {
+            dao.getUsernames().collect(){ usernames ->
+
+                _usernameState.value = usernames.getOrNull(0)!!
+            }
+        }
+    }
 
     //functions, interactions for Assignment DB
     fun saveAssignment(assignment: Assignment){
@@ -64,16 +85,19 @@ class MainViewModel(private val dao: MainDao): ViewModel() {
 
     fun editAssignment(assignment: Assignment){
         _assignmentState.value = assignment
+        _mainViewState.update { it.copy(currentProject = assignment.projectName) }
         //_mainViewState.update { it.copy(openDialog = true) }
     }
 
     fun editNote(note: Note){
         _noteState.value = note
+        _mainViewState.update { it.copy(currentProject = note.projectName) }
         //_mainViewState.update { it.copy(openDialog = true) }
     }
 
     fun editExam(exam: Exam){
         _examState.value = exam
+        _mainViewState.update { it.copy(currentProject = exam.projectName) }
         //_mainViewState.update { it.copy(openDialog = true) }
     }
 
@@ -95,6 +119,28 @@ class MainViewModel(private val dao: MainDao): ViewModel() {
         }
         getAssignments()
     }
+
+    fun deleteButton(note: Note){
+        viewModelScope.launch {
+            dao.deleteNote(note)
+        }
+        getNotes()
+    }
+
+    fun deleteButton(exam: Exam){
+        viewModelScope.launch {
+            dao.deleteExam(exam)
+        }
+        getExams()
+    }
+
+    fun deleteButton(project: Project){
+        viewModelScope.launch {
+            dao.deleteProject(project)
+        }
+        getProjects()
+    }
+
 
     fun selectScreen(screen: Screen){
         _mainViewState.update { it.copy(selectedScreen = screen) }
@@ -174,6 +220,22 @@ class MainViewModel(private val dao: MainDao): ViewModel() {
                 _mainViewState.update { it.copy(notes = allNotes) }
             }
         }
+    }
+
+    fun updateNote(note: Note){
+        viewModelScope.launch {
+            dao.updateNote(note)
+        }
+        getNotes()
+        closeDialog()
+    }
+
+    fun updateExam(exam: Exam){
+        viewModelScope.launch {
+            dao.updateExam(exam)
+        }
+        getExams()
+        closeDialog()
     }
 
 

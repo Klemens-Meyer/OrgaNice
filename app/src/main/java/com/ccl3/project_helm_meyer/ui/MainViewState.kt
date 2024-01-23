@@ -15,6 +15,7 @@ data class MainViewState (
     val specificProject: List<ProjectWithAssignmentsAndNotesAndExams> = emptyList(),
     val currentAdding: String = "",
     val currentEdit: String = "",
+    val currentProject: String = "",
     val projectsWithAssignmentsAndNotesAndExams: List<ProjectWithAssignmentsAndNotesAndExams> = emptyList(),
     val selectedScreen: Screen = Screen.First,
     val openDialog: Boolean = false
