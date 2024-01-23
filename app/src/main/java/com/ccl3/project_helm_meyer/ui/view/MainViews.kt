@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -79,6 +80,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -793,6 +795,9 @@ fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostC
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
+                                    modifier = Modifier.padding(end = 16.dp),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     text = assignment.assignmentDesc,
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondary,
@@ -848,7 +853,7 @@ fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostC
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                             .clickable {
-                                mainViewModel.setCurrentEdit("Assignment")
+                                mainViewModel.setCurrentEdit("Note")
                                 mainViewModel.editNote(note)
                                 navController.navigate(Screen.EditPage.route)
                             },
@@ -871,6 +876,9 @@ fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostC
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
+                                    modifier = Modifier.padding(end = 16.dp),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     text = note.noteDesc,
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondary,
@@ -988,171 +996,238 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
 
 
     Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+
     ) {
 
+        Spacer(modifier = Modifier.height(16.dp))
         IconButton(onClick = { navController.navigateUp() }) {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Go back", tint = MaterialTheme.colorScheme.onPrimary)
         }
 
-        Text(text = "Create your ${state.value.currentAdding}", fontSize = 36.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
+        Text(
+            text = "Add your ${
+                if(state.value.currentAdding == "AssignmentWithProject"){
+                "Assignment"
+                }else{     
+                    state.value.currentAdding       
+                }}",
+            fontSize = 32.sp,
+            style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onPrimary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+        )
 
-        Spacer(modifier = Modifier.height(40.dp))
-        if(state.value.currentAdding == "Project" || state.value.currentAdding == "AssignmentWithProject"){
-            TextField(
-                value = projectName,
-                onValueChange = { newText ->
-                    projectName = newText
-                },
-                label = { Text(text = "Project Name") }
-            )
-        }
-
-
-        if(state.value.currentAdding == "Assignment" || state.value.currentAdding == "AssignmentWithProject") {
-
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = assignmentName,
-                onValueChange = { newText ->
-                    assignmentName = newText
-                },
-                label = { Text(text = "ass Name") }
-            )
-
-
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = assignmentDesc,
-                onValueChange = { newText ->
-                    assignmentDesc = newText
-                },
-                label = { Text(text = "Assignment Description") }
-            )
-
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = daysLeft,
-                onValueChange = { newText ->
-                    daysLeft = newText
-                },
-                label = { Text(text = "Days left to Deadline") }
-            )
-        }else if(state.value.currentAdding == "Note"){
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = noteName,
-                onValueChange = {
-                        newText -> noteName = newText
-                },
-                label = { Text(text = "NoteName") }
-            )
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = noteDesc,
-                onValueChange = {
-                        newText -> noteDesc = newText
-                },
-                label = { Text(text = "NoteDesc") }
-            )
-        }else if(state.value.currentAdding == "Exam") {
-
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = examName,
-                onValueChange = { newText ->
-                    examName = newText
-                },
-                label = { Text(text = "ExamName") }
-            )
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = examDate,
-                onValueChange = { newText ->
-                    examDate = newText
-                },
-                label = { Text(text = "ExamDate") }
-            )
-        }
-
-        Button(
-            onClick = {
-                if(state.value.currentAdding == "Assignment" || state.value.currentAdding == "AssignmentWithProject"){ //!!!!!!!!!!!!LEER Project
-                    if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()){
-                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
-                    }else{
-                        if(daysLeft.text.toIntOrNull()!=null){
-                            if(state.value.currentAdding == "AssignmentWithProject"){
-                                if(projectName.text.isNullOrEmpty()){
-                                    Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
-
-                                }else {
-                                    for (projectInTable in state.value.projects) {
-                                        if (projectInTable.projectName == projectName.text) {
-                                            checkii = true
-                                            break
-                                        } else {
-                                            checkii = false
-                                        }
-                                    }
-                                    if (!checkii) {
-                                        mainViewModel.saveProject(Project(projectName.text))
-                                    }
-                                }
-                            }
-
-
-
-                            if(state.value.currentAdding == "Assignment"){
-                                mainViewModel.saveAssignment(Assignment(currentProject, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
-                            }else if(state.value.currentAdding == "AssignmentWithProject") {
-                                mainViewModel.saveAssignment(Assignment(projectName.text, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
-
-                            }
-
-                            Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
-
-                        }else{
-                            Toast.makeText(context,"make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }else if(state.value.currentAdding == "Note"){
-                    if(noteName.text.isNullOrEmpty() || noteDesc.text.isNullOrEmpty()){
-                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
-
-                    }else{
-                        mainViewModel.saveNote(Note(currentProject, noteName.text, noteDesc.text))
-                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
-                    }
-                }else if(state.value.currentAdding == "Exam"){
-                    if(examName.text.isNullOrEmpty() || examDate.text.isNullOrEmpty()){
-                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
-
-                    }else{
-                        mainViewModel.saveExam(Exam(currentProject, examName.text, examDate.text))
-                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
-                    }
-                }else if(state.value.currentAdding == "Project"){
-                    if(projectName.text.isNullOrEmpty()){
-                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
-
-                    }else{
-                        mainViewModel.saveProject(Project(projectName.text))
-                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
-                    }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item {
+                if(state.value.currentAdding == "Project" || state.value.currentAdding == "AssignmentWithProject"){
+                    TextField(
+                        value = projectName,
+                        onValueChange = { newText ->
+                            projectName = newText
+                        },
+                        label = { Text(text = "Project Name") }
+                    )
                 }
 
 
+                if(state.value.currentAdding == "Assignment" || state.value.currentAdding == "AssignmentWithProject") {
 
-            },
-            modifier = Modifier.padding(top = 20.dp)
-        ) {
-            Text(text = "Save", fontSize = 20.sp)
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = assignmentName,
+                        onValueChange = { newText ->
+                            assignmentName = newText
+                        },
+                        label = { Text(text = "ass Name") }
+                    )
+
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = daysLeft,
+                        onValueChange = { newText ->
+                            daysLeft = newText
+                        },
+                        label = { Text(text = "Days left to Deadline") }
+                    )
+
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = assignmentDesc,
+                        onValueChange = { newText ->
+                            assignmentDesc = newText
+                        },
+                        label = { Text(text = "Assignment Description") }
+                    )
+                }else if(state.value.currentAdding == "Note"){
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = noteName,
+                        onValueChange = {
+                                newText -> noteName = newText
+                        },
+                        label = { Text(text = "NoteName") }
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = noteDesc,
+                        onValueChange = {
+                                newText -> noteDesc = newText
+                        },
+                        label = { Text(text = "NoteDesc") }
+                    )
+                }else if(state.value.currentAdding == "Exam") {
+
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = examName,
+                        onValueChange = { newText ->
+                            examName = newText
+                        },
+                        label = { Text(text = "ExamName") }
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = examDate,
+                        onValueChange = { newText ->
+                            examDate = newText
+                        },
+                        label = { Text(text = "ExamDate") }
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        if(state.value.currentAdding == "Assignment" || state.value.currentAdding == "AssignmentWithProject"){ //!!!!!!!!!!!!LEER Project
+                            if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()){
+                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+                            }else{
+                                if(daysLeft.text.toIntOrNull()!=null){
+                                    if(state.value.currentAdding == "AssignmentWithProject"){
+                                        if(projectName.text.isNullOrEmpty()){
+                                            Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                                        }else {
+                                            for (projectInTable in state.value.projects) {
+                                                if (projectInTable.projectName == projectName.text) {
+                                                    checkii = true
+                                                    break
+                                                } else {
+                                                    checkii = false
+                                                }
+                                            }
+                                            if (!checkii) {
+                                                mainViewModel.saveProject(Project(projectName.text))
+                                            }
+                                        }
+                                    }
+
+
+
+                                    if(state.value.currentAdding == "Assignment"){
+                                        mainViewModel.saveAssignment(Assignment(currentProject, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
+                                    }else if(state.value.currentAdding == "AssignmentWithProject") {
+                                        mainViewModel.saveAssignment(Assignment(projectName.text, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
+
+                                    }
+
+                                    Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+
+                                }else{
+                                    Toast.makeText(context,"make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }else if(state.value.currentAdding == "Note"){
+                            if(noteName.text.isNullOrEmpty() || noteDesc.text.isNullOrEmpty()){
+                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                            }else{
+                                mainViewModel.saveNote(Note(currentProject, noteName.text, noteDesc.text))
+                                Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                            }
+                        }else if(state.value.currentAdding == "Exam"){
+                            if(examName.text.isNullOrEmpty() || examDate.text.isNullOrEmpty()){
+                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                            }else{
+                                mainViewModel.saveExam(Exam(currentProject, examName.text, examDate.text))
+                                Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                            }
+                        }else if(state.value.currentAdding == "Project"){
+                            if(projectName.text.isNullOrEmpty()){
+                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                            }else{
+                                mainViewModel.saveProject(Project(projectName.text))
+                                Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                            }
+                        }
+
+
+
+                    },
+                    modifier = Modifier.padding(top = 20.dp)
+                ) {
+                    Text(text = "Save", fontSize = 20.sp)
+                }
+            }
         }
+
+
     }
 }
 
@@ -1210,22 +1285,34 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
     }
 
     Column (
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+
     ) {
 
-        IconButton(onClick = { navController.navigateUp() }) {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
+        Spacer(modifier = Modifier.height(16.dp))
+        IconButton(onClick = { navController.navigateUp() },
+        )
+
+        {
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Go back", tint = MaterialTheme.colorScheme.onPrimary)
         }
 
-        Text(text = "Edit your ${state.value.currentEdit}", fontSize = 36.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
+        Text(
+            text = "Edit your ${state.value.currentEdit}",
+            fontSize = 32.sp,
+            style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onPrimary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+        )
 
-        Spacer(modifier = Modifier.height(40.dp))
-
-        /*
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item {
+                /*
         TextField(
 
             value = projectName,
@@ -1235,122 +1322,177 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
             label = { Text(text = "Projc Name") }
         )
         */
-        if(state.value.currentEdit == "Assignment") {
+                if(state.value.currentEdit == "Assignment") {
 
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = assignmentName,
-                onValueChange = { newText ->
-                    assignmentName = newText
-                },
-                label = { Text(text = "ass Name") },
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = assignmentName,
+                        onValueChange = { newText ->
+                            assignmentName = newText
+                        },
+                        label = { Text(text = "ass Name") },
 
-            )
+                    )
+
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = daysLeft,
+                        onValueChange = { newText ->
+                            daysLeft = newText
+                        },
+                        label = { Text(text = "Days left to Deadline") }
+                    )
+
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+
+                        shape = RoundedCornerShape(16.dp),
+                        value = assignmentDesc,
+                        onValueChange = { newText ->
+                            assignmentDesc = newText
+                        },
+                        label = { Text(text = "Assignment Description") }
+                    )
 
 
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = assignmentDesc,
-                onValueChange = { newText ->
-                    assignmentDesc = newText
-                },
-                label = { Text(text = "Assignment Description") }
-            )
-
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = daysLeft,
-                onValueChange = { newText ->
-                    daysLeft = newText
-                },
-                label = { Text(text = "Days left to Deadline") }
-            )
-        }else if(state.value.currentEdit == "Note"){
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = noteName,
-                onValueChange = {
-                        newText -> noteName = newText
-                },
-                label = { Text(text = "NoteName") }
-            )
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = noteDesc,
-                onValueChange = {
-                        newText -> noteDesc = newText
-                },
-                label = { Text(text = "NoteDesc") }
-            )
-        }else if(state.value.currentEdit == "Exam") {
-
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = examName,
-                onValueChange = { newText ->
-                    examName = newText
-                },
-                label = { Text(text = "ExamName") }
-            )
-            TextField(
-                modifier = Modifier.padding(top = 12.dp),
-                value = examDate,
-                onValueChange = { newText ->
-                    examDate = newText
-                },
-                label = { Text(text = "ExamDate") }
-            )
-        }
-
-        Button(
-            onClick = {
-                if(state.value.currentEdit == "Assignment"){
-                    if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()){
-                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
-                    }else{
-                        if(daysLeft.text.toIntOrNull()!=null){
-                            /*for(projectInTable in state.value.projects){
-                                if(projectInTable.projectName == projectName.text){
-                                    checkii = true
-                                    break
-                                }else{
-                                    checkii = false
-                                }
-                            }
-                            if(!checkii){
-                                //mainViewModel.saveProject(Project(projectName.text))
-                            }
-                            */
-                            mainViewModel.updateAssignment(Assignment(currentProject, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt(), assState.value.id))
-
-                            Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
-
-                        }else{
-                            Toast.makeText(context,"Make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
-                        }
-                    }
                 }else if(state.value.currentEdit == "Note"){
-                    if(noteName.text.isNullOrEmpty() || noteDesc.text.isNullOrEmpty()){
-                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = noteName,
+                        onValueChange = {
+                                newText -> noteName = newText
+                        },
+                        label = { Text(text = "NoteName") }
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = noteDesc,
+                        onValueChange = {
+                                newText -> noteDesc = newText
+                        },
+                        label = { Text(text = "NoteDesc") }
+                    )
+                }else if(state.value.currentEdit == "Exam") {
 
-                    }else{
-                        mainViewModel.updateNote(Note(currentProject, noteName.text, noteDesc.text, noteState.value.id))
-                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
-                    }
-                }else if(state.value.currentEdit == "Exam"){
-                    if(examName.text.isNullOrEmpty() || examDate.text.isNullOrEmpty()){
-                        Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
-
-                    }else{
-                        mainViewModel.updateExam(Exam(currentProject, examName.text, examDate.text, examState.value.id))
-                        Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
-                    }
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = examName,
+                        onValueChange = { newText ->
+                            examName = newText
+                        },
+                        label = { Text(text = "ExamName") }
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        value = examDate,
+                        onValueChange = { newText ->
+                            examDate = newText
+                        },
+                        label = { Text(text = "ExamDate") }
+                    )
                 }
 
-            },
-            modifier = Modifier.padding(top = 20.dp)
-        ) {
-            Text(text = "Save", fontSize = 20.sp)
+                Button(
+                    onClick = {
+                        if(state.value.currentEdit == "Assignment"){
+                            if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()){
+                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+                            }else{
+                                if(daysLeft.text.toIntOrNull()!=null){
+                                    /*for(projectInTable in state.value.projects){
+                                        if(projectInTable.projectName == projectName.text){
+                                            checkii = true
+                                            break
+                                        }else{
+                                            checkii = false
+                                        }
+                                    }
+                                    if(!checkii){
+                                        //mainViewModel.saveProject(Project(projectName.text))
+                                    }
+                                    */
+                                    mainViewModel.updateAssignment(Assignment(currentProject, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt(), assState.value.id))
+
+                                    Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+
+                                }else{
+                                    Toast.makeText(context,"Make sure Days-Left are numeric", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }else if(state.value.currentEdit == "Note"){
+                            if(noteName.text.isNullOrEmpty() || noteDesc.text.isNullOrEmpty()){
+                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                            }else{
+                                mainViewModel.updateNote(Note(currentProject, noteName.text, noteDesc.text, noteState.value.id))
+                                Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                            }
+                        }else if(state.value.currentEdit == "Exam"){
+                            if(examName.text.isNullOrEmpty() || examDate.text.isNullOrEmpty()){
+                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+
+                            }else{
+                                mainViewModel.updateExam(Exam(currentProject, examName.text, examDate.text, examState.value.id))
+                                Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                            }
+                        }
+
+                    },
+                    modifier = Modifier.padding(top = 20.dp)
+                ) {
+                    Text(text = "Save", fontSize = 20.sp)
+                }
+            }
         }
+
+
     }
 }
