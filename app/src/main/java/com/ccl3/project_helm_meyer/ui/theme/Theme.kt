@@ -24,7 +24,7 @@ private val DarkColorScheme = darkColorScheme(
         background = BackgroundColor,
         onPrimary = TextColor,
         onSecondary = SecondTextColor,
-        onError = TestColor
+        onError = RedColor
 
 )
 

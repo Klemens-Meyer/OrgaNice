@@ -1,4 +1,4 @@
-package com.ccl3.project_helm_meyer.ui.theme
+ package com.ccl3.project_helm_meyer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
@@ -10,7 +10,7 @@ val MainColor = Color(0xFF7F67BE)
 val SecondColor = Color(0xFF1D1B20)
 val TextColor = Color(0xFFCAC4D0)
 val SecondTextColor = Color(0xFF4A4458)
-val TestColor = Color(0xFFFF0000)
+val RedColor = Color(0xFF8C2739)
 
 
 

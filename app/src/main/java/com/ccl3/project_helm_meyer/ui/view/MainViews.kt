@@ -1,12 +1,16 @@
 package com.ccl3.project_helm_meyer.ui.view
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import android.util.Log
+import android.view.RoundedCorner
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,10 +40,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.materialIcon
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,6 +78,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -135,6 +146,8 @@ fun MainView(mainViewModel: MainViewModel, firstStartScreen: Boolean){
             composable(Screen.Main.route){
                 mainViewModel.selectScreen(Screen.Main)
                 mainViewModel.getUsernames()
+                mainViewModel.getProjectsWithAssignmentsAndNotesAndExams()
+                mainViewModel.getAssignments()
                 mainScreen(mainViewModel, navController)
             }
             composable(Screen.Second.route){
@@ -163,7 +176,6 @@ fun MainView(mainViewModel: MainViewModel, firstStartScreen: Boolean){
                 //mainViewModel.getSpecificProject()
                 //if(entweder assignment, note, exam) bla bla maybe
                 //mainViewModel.getOneAssignment(assState.value.id)
-
                 displayEditPage(mainViewModel, navController)
             }
         }
@@ -323,21 +335,79 @@ fun mainScreen(mainViewModel: MainViewModel, navController: NavHostController){
     //var checkii: Boolean = false
 
 
+    var sortedListOfAssignment = state.value.assignments.sortedBy {
+        it.daysLeft
+    }
+
+
     Column (
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Hello, " + userState.value.userName + "!", fontSize = 30.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
-        Text(text = "Have a nice day!", fontSize = 16.sp,  style = TextStyle(fontFamily = FontFamily.Cursive))
 
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
-            contentDescription = "Box"
+        Spacer(modifier = Modifier.padding(20.dp))
+
+        Text(
+            text = "Hello,",
+            fontSize = 32.sp,
+            style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onPrimary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp)
         )
+
+        Text(
+            text = userState.value.userName + "!",
+            fontSize = 32.sp,
+            style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp)
+        )
+
+        Text(
+            text = "Have a nice day!",
+            fontSize = 16.sp,
+            style = TextStyle(fontFamily = FontFamily.Default),
+            color = MaterialTheme.colorScheme.onSecondary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp)
+        )
+        Spacer(modifier = Modifier.padding(20.dp))
     }
+
+
+
+    /*LazyRow(                                                                                          //Big Errors
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp)
+    ) {
+        items(state.value.projectsWithAssignmentsAndNotesAndExams) { projectInfo ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .size(142.dp, 161.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable {
+                        mainViewModel.setSpecificProject(projectInfo.project)
+                        navController.navigate(Screen.SpecificProject.route)
+                    },
+                elevation = 4.dp,
+                shape = RoundedCornerShape(16.dp),
+                backgroundColor = MaterialTheme.colorScheme.secondary,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+            ) {
+        }
+    }*/
+
+
 
 }
 
@@ -363,66 +433,99 @@ fun displayAssignments(mainViewModel: MainViewModel, navController: NavHostContr
             }
         },
         content = { paddingValues ->
-            LazyColumn (
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                item {
-                    Spacer(modifier = Modifier.height(60.dp))
+
+            Column{
+                Spacer(modifier = Modifier.padding(20.dp))
+                Row (
+                    modifier = Modifier.padding(start = 16.dp)
+                ){
                     Text(
-                        text = "Current Assignments:",
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        style = TextStyle(fontFamily = FontFamily.Cursive)
+                        text = "Your ",
+                        fontSize = 32.sp,
+                        style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Start,
+                    )
+                    Text(
+                        text = "Assignments",
+                        fontSize = 32.sp,
+                        style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        textAlign = TextAlign.Start,
                     )
                 }
+                Text(
+                    text = "Sorted by the Due Date",
+                    fontSize = 16.sp,
+                    style = TextStyle(fontFamily = FontFamily.Default),
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp)
+                )
+                Spacer(modifier = Modifier.padding(20.dp))
 
-                items(sortedListOfAssignment) { assignment ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable {
-                                mainViewModel.setCurrentEdit("Assignment")
-                                mainViewModel.editAssignment(assignment)
-                                navController.navigate(Screen.EditPage.route)
-                            },
-                        elevation = 4.dp
-                    ) {
-                        Row(
+                LazyColumn (
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    items(sortedListOfAssignment) { assignment ->
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .clickable {
+                                    mainViewModel.setCurrentEdit("Assignment")
+                                    mainViewModel.editAssignment(assignment)
+                                    navController.navigate(Screen.EditPage.route)
+                                },
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(16.dp),
+                            backgroundColor = MaterialTheme.colorScheme.secondary,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = "Assignment",
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = assignment.assignmentName,
-                                    style = MaterialTheme.typography.headlineSmall
-                                )
-                                Text(
-                                    text = assignment.projectName,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                            Text(
-                                text = "${assignment.daysLeft} days left",
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.align(Alignment.CenterVertically)
-                            )
-                            IconButton(
-                                onClick = { mainViewModel.deleteButton(assignment) }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Default.Delete, "Delete")
+                               // Icon(
+                               //     imageVector = Icons.Default.Email,
+                               //     contentDescription = "Assignment",
+                               //     modifier = Modifier.size(32.dp)
+                                //     )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = assignment.assignmentName,
+                                        fontSize = 24.sp,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    Text(
+                                        text = assignment.projectName,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                    )
+                                }
+                                Text(
+                                    text = "${assignment.daysLeft} days left",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                )
+                                IconButton(
+                                    onClick = { mainViewModel.deleteButton(assignment) }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete, "Delete",
+                                        tint = MaterialTheme.colorScheme.onError
+                                    )
+                                }
                             }
                         }
                     }
@@ -433,97 +536,421 @@ fun displayAssignments(mainViewModel: MainViewModel, navController: NavHostContr
 }
 
 
+
+
+
+//@SuppressLint("SuspiciousIndentation")
 @Composable
 fun displayProjects(mainViewModel: MainViewModel, navController: NavHostController){
     val state = mainViewModel.mainViewState.collectAsState()
 
-        Scaffold(
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        mainViewModel.setCurrentAdding("Project")
-                        navController.navigate(Screen.AddingPage.route)
-                    },
-                    backgroundColor = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape( 16.dp),
-
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Project", tint = MaterialTheme.colorScheme.onPrimary)
-                }
-            },
-        content = { paddingValues ->
-            LazyColumn (
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    mainViewModel.setCurrentAdding("Project")
+                    navController.navigate(Screen.AddingPage.route)
+                },
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(16.dp),
             ) {
-                item {
-                    Spacer(modifier = Modifier.height(60.dp))
+                Icon(Icons.Default.Add, contentDescription = "Add Project", tint = MaterialTheme.colorScheme.onPrimary)
+            }
+        },
+        content = { paddingValues ->
+            Column {
+                Spacer(modifier = Modifier.padding(20.dp))
+                Row (
+                    modifier = Modifier.padding(start = 16.dp)
+                ){
                     Text(
-                        text = "Your Projects:",
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        style = TextStyle(fontFamily = FontFamily.Cursive)
+                        text = "Your ",
+                        fontSize = 32.sp,
+                        style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Start,
                     )
-                    // Add your filters UI here
+                    Text(
+                        text = "Projects",
+                        fontSize = 32.sp,
+                        style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        textAlign = TextAlign.Start,
+                    )
+                }
+                Text(
+                    text = "And Courses",
+                    fontSize = 16.sp,
+                    style = TextStyle(fontFamily = FontFamily.Default),
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp)
+                )
+                Spacer(modifier = Modifier.padding(20.dp))                                                    //Padding below the Header
+
+                LazyColumn (
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    items(state.value.projectsWithAssignmentsAndNotesAndExams) { projectInfo ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .clickable {
+                                    mainViewModel.setSpecificProject(projectInfo.project)
+                                    navController.navigate(Screen.SpecificProject.route)
+                                },
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(16.dp),
+                            backgroundColor = MaterialTheme.colorScheme.secondary,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Project",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Text(
+                                        text = projectInfo.project.projectName,
+                                        fontSize = 24.sp,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Row {
+                                        Icon(
+                                            Icons.Default.List,
+                                            contentDescription = "Assignments",
+                                            tint = MaterialTheme.colorScheme.onSecondary,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .padding(end = 4.dp)
+                                        )
+                                        Text(
+                                            text = "${projectInfo.assignments.size}",
+                                            fontSize = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSecondary,
+                                            modifier = Modifier.padding(end = 15.dp)
+                                        )
+
+                                        Icon(
+                                            Icons.Default.Create,
+                                            contentDescription = "Notes",
+                                            tint = MaterialTheme.colorScheme.onSecondary,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .padding(end = 4.dp)
+                                        )
+                                        Text(
+                                            text = "${projectInfo.notes.size}",
+                                            fontSize = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSecondary,
+                                            modifier = Modifier.padding(end = 15.dp)
+                                        )
+
+                                        Icon(
+                                            Icons.Default.DateRange,
+                                            contentDescription = "Exams",
+                                            tint = MaterialTheme.colorScheme.onSecondary,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .padding(end = 4.dp)
+                                        )
+                                        Text(
+                                            text = "${projectInfo.exams.size}",
+                                            fontSize = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSecondary
+                                        )
+                                    }
+                                }
+                                IconButton(
+                                    onClick = {
+                                        mainViewModel.deleteButton(projectInfo.project)
+                                        for(assi in projectInfo.assignments){
+                                            mainViewModel.deleteButton(assi)
+                                        }
+                                        for(noti in projectInfo.notes){
+                                            mainViewModel.deleteButton(noti)
+                                        }
+                                        for(exi in projectInfo.exams){
+                                            mainViewModel.deleteButton(exi)
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.Delete, "Delete",
+                                        tint = MaterialTheme.colorScheme.onError
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+
+
+
+@Composable
+fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostController) {
+    val state = mainViewModel.mainViewState.collectAsState()
+    //var sortedListOfExam= state.value.assignments.sortedBy {
+    //    it.daysLeft
+    //}
+
+    Column (){
+        Spacer(modifier = Modifier.height(16.dp))
+        IconButton(onClick = { navController.navigateUp() }) {
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Go back", tint = MaterialTheme.colorScheme.onPrimary)
+        }
+
+        Text(
+            text = "${state.value.specificProject.getOrNull(0)?.project?.projectName}",
+            fontSize = 32.sp,
+            style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onPrimary,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+        )
+
+        LazyColumn(
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            //Assignments
+            state.value.specificProject.getOrNull(0)?.assignments?.let { assignments ->
+                item {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Assignments",
+                            fontSize = 24.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 16.dp, end = 16.dp)
+                        )
+                        Button(onClick = {
+                            mainViewModel.setCurrentAdding("Assignment")
+                            navController.navigate(Screen.AddingPage.route) },
+                            modifier = Modifier.padding(end = 16.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        {
+                            Icon(Icons.Default.Add, contentDescription = "Add Assignment", tint = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
                 }
 
-                items(state.value.projectsWithAssignmentsAndNotesAndExams) { projectInfo ->
+
+                items(assignments) { assignment ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                             .clickable {
-                                mainViewModel.setSpecificProject(projectInfo.project)
-                                navController.navigate(Screen.SpecificProject.route)
+                                mainViewModel.setCurrentEdit("Assignment")
+                                mainViewModel.editAssignment(assignment)
+                                navController.navigate(Screen.EditPage.route)
                             },
-                        elevation = 4.dp
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        backgroundColor = MaterialTheme.colorScheme.secondary,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Project",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray
+                                    text = assignment.assignmentName,
+                                    fontSize = 24.sp,
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
-                                    text = projectInfo.project.projectName,
-                                    style = MaterialTheme.typography.headlineSmall
+                                    text = assignment.assignmentDesc,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSecondary,
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                //Text(
-                                //    text = projectInfo.project.daysLeft.toString(),
-                                //    style = MaterialTheme.typography.bodySmall
-                                //)
-                                Row {
-                                    Icon(Icons.Default.Call, contentDescription = "Assignments")
-                                    Text(text = "${projectInfo.assignments.size}")
-                                    Icon(Icons.Default.Build, contentDescription = "Notes")
-                                    Text(text = "${projectInfo.notes.size}")
-                                    Icon(Icons.Default.AccountBox, contentDescription = "Exams")
-                                    Text(text = "${projectInfo.exams.size}")
-                                }
                             }
+                            Text(
+                                text = "${assignment.daysLeft} days left",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
                             IconButton(
-                                onClick = {
-                                            mainViewModel.deleteButton(projectInfo.project)
-                                            for(assi in projectInfo.assignments){
-                                                mainViewModel.deleteButton(assi)
-                                            }
-                                            for(noti in projectInfo.notes){
-                                                mainViewModel.deleteButton(noti)
-                                            }
-                                            for(exi in projectInfo.exams){
-                                                mainViewModel.deleteButton(exi)
-                                            }
-                                }
+                                onClick = { mainViewModel.deleteButton(assignment) }
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete, "Delete",
+                                    tint = MaterialTheme.colorScheme.onError
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Notes
+            state.value.specificProject.getOrNull(0)?.notes?.let { notes ->
+                item {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Notes",
+                            fontSize = 24.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 16.dp, top = 24.dp)
+                        )
+                        Button(onClick = {
+                            mainViewModel.setCurrentAdding("Note")
+                            navController.navigate(Screen.AddingPage.route) },
+                            modifier = Modifier.padding(end = 16.dp, top = 24.dp),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        {
+                            Icon(Icons.Default.Add, contentDescription = "Add Note", tint = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+                }
+                items(notes) { note ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .clickable {
+                                mainViewModel.setCurrentEdit("Assignment")
+                                mainViewModel.editNote(note)
+                                navController.navigate(Screen.EditPage.route)
+                            },
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        backgroundColor = MaterialTheme.colorScheme.secondary,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = note.noteName,
+                                    fontSize = 24.sp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Text(
+                                    text = note.noteDesc,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { mainViewModel.deleteButton(note) }
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete, "Delete",
+                                    tint = MaterialTheme.colorScheme.onError
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Exams
+            state.value.specificProject.getOrNull(0)?.exams?.let { exams ->
+                item {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Exams",
+                            fontSize = 24.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 16.dp, top = 24.dp)
+                        )
+                        Button(onClick = {
+                            mainViewModel.setCurrentAdding("Exam")
+                            navController.navigate(Screen.AddingPage.route) },
+                        modifier = Modifier.padding(end = 16.dp, top = 24.dp),
+                            shape = RoundedCornerShape(16.dp))
+                        {
+                            Icon(Icons.Default.Add, contentDescription = "Add Exam", tint = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+                }
+                items(exams) { exam ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .clickable {
+                                mainViewModel.setCurrentEdit("Exam")
+                                mainViewModel.editExam(exam)
+                                navController.navigate(Screen.EditPage.route)
+                            },
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        backgroundColor = MaterialTheme.colorScheme.secondary,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = exam.examName,
+                                    fontSize = 24.sp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                            Text(
+                                text = "${exam.examDate}",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                            IconButton(
+                                onClick = { mainViewModel.deleteButton(exam) }
                             ) {
                                 Icon(
                                     Icons.Default.Delete, "Delete",
@@ -535,169 +962,8 @@ fun displayProjects(mainViewModel: MainViewModel, navController: NavHostControll
                 }
             }
         }
-    )
-}
-
-
-
-@Composable
-fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostController) {
-    val state = mainViewModel.mainViewState.collectAsState()
-    //var sortedListOfExam= state.value.assignments.sortedBy {
-    //    it.daysLeft
-    //}
-    LazyColumn(
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        item {
-            Spacer(modifier = Modifier.height(60.dp))
-            IconButton(onClick = { navController.navigateUp() }) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Go back")
-            }
-            Text(
-                text = "Project: ${state.value.specificProject.getOrNull(0)?.project?.projectName}",
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold,
-                style = TextStyle(fontFamily = FontFamily.Cursive)
-            )
-        }
-
-        //Assignments
-        state.value.specificProject.getOrNull(0)?.assignments?.let { assignments ->
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Assignments",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Button(onClick = {
-                        mainViewModel.setCurrentAdding("Assignment")
-                        navController.navigate(Screen.AddingPage.route)
-                    }) {
-                        Text("Add Assignment")
-                    }
-                }
-            }
-            items(assignments) { assignment ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)
-                        .border(1.dp, Color.Gray)
-                        .clickable {
-                            mainViewModel.setCurrentEdit("Assignment")
-                            mainViewModel.editAssignment(assignment)
-                            navController.navigate(Screen.EditPage.route)
-                        },
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "${assignment.assignmentName}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        Text(text = "Due in: ${assignment.daysLeft} Days")
-                    }
-                    IconButton(
-                        onClick = { mainViewModel.deleteButton(assignment) }
-                    ) {
-                        Icon(Icons.Default.Delete, "Delete")
-                    }
-                }
-            }
-        }
-
-        //Notes
-        state.value.specificProject.getOrNull(0)?.notes?.let { notes ->
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Notes",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Button(onClick = {
-                        mainViewModel.setCurrentAdding("Note")
-                        navController.navigate(Screen.AddingPage.route) }) {
-                        Text("Add Note")
-                    }
-                }
-            }
-            items(notes) { note ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp)
-                            .border(1.dp, Color.Gray)
-                            .clickable {
-                                mainViewModel.setCurrentEdit("Note")
-                                mainViewModel.editNote(note)
-                                navController.navigate(Screen.EditPage.route)
-                            },
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(text = "Note: ${note.noteName}")
-                        }
-                        IconButton(
-                            onClick = { mainViewModel.deleteButton(note) }
-                        ) {
-                            Icon(Icons.Default.Delete, "Delete")
-                        }
-                    }
-            }
-        }
-
-        //Exams
-        state.value.specificProject.getOrNull(0)?.exams?.let { exams ->
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Exams",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Button(onClick = {
-                        mainViewModel.setCurrentAdding("Exam")
-                        navController.navigate(Screen.AddingPage.route) }) {
-                        Text("Add Exam")
-                    }
-                }
-            }
-            items(exams) { exam ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp)
-                            .border(1.dp, Color.Gray)
-                            .clickable {
-                                mainViewModel.setCurrentEdit("Exam")
-                                mainViewModel.editExam(exam)
-                                navController.navigate(Screen.EditPage.route)
-                            },
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(text = "Exam: ${exam.examName}")
-                        }
-                        IconButton(
-                            onClick = { mainViewModel.deleteButton(exam) }
-                        ) {
-                            Icon(Icons.Default.Delete, "Delete")
-                        }
-                    }
-            }
-        }
     }
+
 }
 
 

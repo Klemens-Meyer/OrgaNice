@@ -49,8 +49,12 @@ class MainViewModel(private val dao: MainDao): ViewModel() {
     fun getUsernames(){
         viewModelScope.launch {
             dao.getUsernames().collect(){ usernames ->
-
-                _usernameState.value = usernames.getOrNull(0)!!
+                if (usernames.isNotEmpty()) {
+                   _usernameState.value = usernames[0]
+                } else {
+                    //oder was anderes wenn halt leer ist
+                 Log.d("Taggyyy", "The list is empty!")
+                }
             }
         }
     }
