@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -79,11 +80,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -97,6 +101,7 @@ import com.ccl3.project_helm_meyer.data.model.Exam
 import com.ccl3.project_helm_meyer.data.model.Note
 import com.ccl3.project_helm_meyer.data.model.Project
 import com.ccl3.project_helm_meyer.data.model.Username
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 sealed class Screen(val route: String){
     object First: Screen("first")
@@ -334,18 +339,22 @@ fun mainScreen(mainViewModel: MainViewModel, navController: NavHostController){
     val userState = mainViewModel.usernameState.collectAsState()
     val context = LocalContext.current
     //Log.d("In IFFFF", state.value.projects.toString())
-    //var checkii: Boolean = false
+    var checkii: Boolean = false
 
 
     var sortedListOfAssignment = state.value.assignments.sortedBy {
         it.daysLeft
+    }
+    if(state.value.projectsWithAssignmentsAndNotesAndExams.isEmpty()){
+        checkii = true
+    }else{
+        checkii = false
     }
 
 
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
     ) {
 
         Spacer(modifier = Modifier.padding(20.dp))
@@ -383,6 +392,296 @@ fun mainScreen(mainViewModel: MainViewModel, navController: NavHostController){
                 .padding(start = 16.dp)
         )
         Spacer(modifier = Modifier.padding(20.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Your Projects",
+                fontSize = 24.sp,
+                style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+
+                    .padding(start = 16.dp)
+                    .align(Alignment.Bottom)
+            )
+
+            Text(
+                text = "Show all",
+                fontSize = 16.sp,
+                style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+                    .padding(end = 16.dp, bottom = 2.dp)
+                    .align(Alignment.Bottom)
+                    .clickable {
+                        navController.navigate(Screen.Second.route)
+                    }
+            )
+        }
+        LazyRow(){
+            if(checkii){
+                items(1){
+                    Card(
+                        modifier = Modifier
+                            //.fillMaxWidth()
+                            .size(width = 178.dp, height = 210.dp)
+                            .padding(start = 16.dp, top = 16.dp)
+                            .clickable {
+                                mainViewModel.setCurrentAdding("Project")
+                                navController.navigate(Screen.AddingPage.route)
+                            },
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        backgroundColor = MaterialTheme.colorScheme.secondary,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxHeight()
+                        ) {
+                            Text(
+                                text = "Create your first Project!",
+                                fontSize = 24.sp,
+                                style = TextStyle(
+                                    fontFamily = FontFamily.Default,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .padding(start = 16.dp, top = 24.dp, end = 16.dp)
+                            )
+                            Icon(
+                                Icons.Default.Add,"Adding",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .padding(bottom = 16.dp)
+                            )
+
+                        }
+                    }
+                }
+            }else{
+                items(state.value.projectsWithAssignmentsAndNotesAndExams){
+                    Card(
+                        modifier = Modifier
+                            //.fillMaxWidth()
+                            .size(width = 178.dp, height = 210.dp)
+                            .padding(start = 16.dp, top = 16.dp)
+                            .clickable {
+                                mainViewModel.setSpecificProject(it.project)
+                                navController.navigate(Screen.SpecificProject.route)
+                            },
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        backgroundColor = MaterialTheme.colorScheme.secondary,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+                    ){
+                        Column (
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxHeight()
+                        ){
+                            Text(
+                                text = it.project.projectName,
+                                fontSize = 24.sp,
+                                style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                textAlign = TextAlign.Start,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .padding(start = 16.dp, top = 24.dp, end = 16.dp)
+                            )
+                            Column (
+                                modifier = Modifier.padding(bottom = 24.dp)
+                            ){
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Assignments",
+                                        fontSize = 16.sp,
+                                        style = TextStyle(fontFamily = FontFamily.Default),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier
+                                            .padding(start = 16.dp)
+                                    )
+                                    Text(
+                                        text = it.assignments.size.toString(),
+                                        fontSize = 16.sp,
+                                        style = TextStyle(fontFamily = FontFamily.Default),
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier
+                                            .padding(end = 16.dp)
+                                    )
+                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Notes",
+                                        fontSize = 16.sp,
+                                        style = TextStyle(fontFamily = FontFamily.Default),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier
+                                            .padding(start = 16.dp)
+                                    )
+                                    Text(
+                                        text = it.notes.size.toString(),
+                                        fontSize = 16.sp,
+                                        style = TextStyle(fontFamily = FontFamily.Default),
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier
+                                            .padding(end = 16.dp)
+                                    )
+                                }
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Exams",
+                                        fontSize = 16.sp,
+                                        style = TextStyle(fontFamily = FontFamily.Default),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier
+                                            .padding(start = 16.dp)
+                                    )
+                                    Text(
+                                        text = it.exams.size.toString(),
+                                        fontSize = 16.sp,
+                                        style = TextStyle(fontFamily = FontFamily.Default),
+                                        color = MaterialTheme.colorScheme.onSecondary,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier
+                                            .padding(end = 16.dp)
+                                    )
+                                }
+                            }
+
+                        }
+
+                    }
+                }
+            }
+
+
+        }
+        Spacer(modifier = Modifier.padding(top = 24.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Upcoming Deadlines",
+                fontSize = 24.sp,
+                style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onPrimary,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+
+                    .padding(start = 16.dp)
+                    .align(Alignment.Bottom)
+            )
+
+            Text(
+                text = "Show all",
+                fontSize = 16.sp,
+                style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline),
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Start,
+                modifier = Modifier
+                    .padding(end = 16.dp, bottom = 2.dp)
+                    .align(Alignment.Bottom)
+                    .clickable {
+                        navController.navigate(Screen.Third.route)
+                    }
+            )
+        }
+        LazyColumn (
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            items(sortedListOfAssignment) { assignment ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        .clickable {
+                            mainViewModel.setCurrentEdit("Assignment")
+                            mainViewModel.editAssignment(assignment)
+                            navController.navigate(Screen.EditPage.route)
+                        },
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    backgroundColor = MaterialTheme.colorScheme.secondary,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Icon(
+                        //     imageVector = Icons.Default.Email,
+                        //     contentDescription = "Assignment",
+                        //     modifier = Modifier.size(32.dp)
+                        //     )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = assignment.assignmentName,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 20.sp,
+                                style = TextStyle(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(end = 16.dp)
+                            )
+                            Text(
+                                text = assignment.projectName,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSecondary,
+                            )
+                        }
+                        Text(
+                            text = "${assignment.daysLeft} days left",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(end = 16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+
     }
 
 
@@ -505,18 +804,24 @@ fun displayAssignments(mainViewModel: MainViewModel, navController: NavHostContr
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = assignment.assignmentName,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                         fontSize = 24.sp,
                                         color = MaterialTheme.colorScheme.onPrimary
                                     )
                                     Text(
                                         text = assignment.projectName,
                                         fontSize = 12.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                         color = MaterialTheme.colorScheme.onSecondary,
                                     )
                                 }
                                 Text(
                                     text = "${assignment.daysLeft} days left",
                                     fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.align(Alignment.CenterVertically)
                                 )
@@ -630,6 +935,8 @@ fun displayProjects(mainViewModel: MainViewModel, navController: NavHostControll
                                     Text(
                                         text = projectInfo.project.projectName,
                                         fontSize = 24.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
                                         color = MaterialTheme.colorScheme.onPrimary,
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -730,6 +1037,8 @@ fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostC
             style = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onPrimary,
             textAlign = TextAlign.Start,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
         )
 
@@ -792,6 +1101,8 @@ fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostC
                                 Text(
                                     text = assignment.assignmentName,
                                     fontSize = 24.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
@@ -873,6 +1184,8 @@ fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostC
                                 Text(
                                     text = note.noteName,
                                     fontSize = 24.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
@@ -948,21 +1261,31 @@ fun displaySpecificProject(mainViewModel: MainViewModel, navController: NavHostC
                                 Text(
                                     text = exam.examName,
                                     fontSize = 24.sp,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    //modifier = Modifier
+                                        //.weight(1f)
                                 )
                             }
                             Text(
                                 text = "${exam.examDate}",
                                 fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                                 color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.align(Alignment.CenterVertically)
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .padding(start = 16.dp)
+
+
                             )
                             IconButton(
                                 onClick = { mainViewModel.deleteButton(exam) }
                             ) {
                                 Icon(
                                     Icons.Default.Delete, "Delete",
-                                    tint = MaterialTheme.colorScheme.onError
+                                    tint = MaterialTheme.colorScheme.onError,
                                 )
                             }
                         }
@@ -1026,7 +1349,15 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
         ) {
             item {
                 if(state.value.currentAdding == "Project" || state.value.currentAdding == "AssignmentWithProject"){
-                    TextField(
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 12.dp)
+                            .widthIn(0.dp, 276.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        shape = RoundedCornerShape(16.dp),
                         value = projectName,
                         onValueChange = { newText ->
                             projectName = newText
@@ -1144,7 +1475,7 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                         shape = RoundedCornerShape(16.dp),
                         value = examDate,
                         onValueChange = { newText ->
-                            examDate = newText
+                            if (newText.text.length <= 15) examDate = newText
                         },
                         label = { Text(text = "ExamDate") }
                     )
@@ -1152,10 +1483,11 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
 
                 Button(
                     onClick = {
-                        if(state.value.currentAdding == "Assignment" || state.value.currentAdding == "AssignmentWithProject"){ //!!!!!!!!!!!!LEER Project
-                            if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()){
-                                Toast.makeText(context,"Fill out everything", Toast.LENGTH_LONG).show()
+                        if(state.value.currentAdding == "Assignment" || state.value.currentAdding == "AssignmentWithProject"){
+                            if(assignmentName.text.isNullOrEmpty() || assignmentDesc.text.isNullOrEmpty() || daysLeft.text.isNullOrEmpty()) {
+                                Toast.makeText(context, "Fill out everything", Toast.LENGTH_LONG).show()
                             }else{
+
                                 if(daysLeft.text.toIntOrNull()!=null){
                                     if(state.value.currentAdding == "AssignmentWithProject"){
                                         if(projectName.text.isNullOrEmpty()){
@@ -1172,6 +1504,7 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                                             }
                                             if (!checkii) {
                                                 mainViewModel.saveProject(Project(projectName.text))
+
                                             }
                                         }
                                     }
@@ -1180,8 +1513,12 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
 
                                     if(state.value.currentAdding == "Assignment"){
                                         mainViewModel.saveAssignment(Assignment(currentProject, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
+                                        //navController.navigate(Screen.Second.route)
+                                        mainViewModel.setSpecificProject(projectState.value)
+                                        navController.navigate(Screen.SpecificProject.route)
                                     }else if(state.value.currentAdding == "AssignmentWithProject") {
                                         mainViewModel.saveAssignment(Assignment(projectName.text, assignmentName.text, assignmentDesc.text, daysLeft.text.toInt()))
+                                        navController.navigate(Screen.Third.route)
 
                                     }
 
@@ -1198,6 +1535,8 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                             }else{
                                 mainViewModel.saveNote(Note(currentProject, noteName.text, noteDesc.text))
                                 Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                                mainViewModel.setSpecificProject(projectState.value)
+                                navController.navigate(Screen.SpecificProject.route)
                             }
                         }else if(state.value.currentAdding == "Exam"){
                             if(examName.text.isNullOrEmpty() || examDate.text.isNullOrEmpty()){
@@ -1206,6 +1545,8 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                             }else{
                                 mainViewModel.saveExam(Exam(currentProject, examName.text, examDate.text))
                                 Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+                                mainViewModel.setSpecificProject(projectState.value)
+                                navController.navigate(Screen.SpecificProject.route)
                             }
                         }else if(state.value.currentAdding == "Project"){
                             if(projectName.text.isNullOrEmpty()){
@@ -1214,6 +1555,8 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                             }else{
                                 mainViewModel.saveProject(Project(projectName.text))
                                 Toast.makeText(context,"Saved!", Toast.LENGTH_LONG).show()
+
+                                navController.navigate(Screen.Second.route)
                             }
                         }
 
@@ -1434,7 +1777,7 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
                         shape = RoundedCornerShape(16.dp),
                         value = examDate,
                         onValueChange = { newText ->
-                            examDate = newText
+                            if (newText.text.length <= 15) examDate = newText
                         },
                         label = { Text(text = "ExamDate") }
                     )
