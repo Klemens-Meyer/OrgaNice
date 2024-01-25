@@ -38,7 +38,9 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
@@ -47,7 +49,9 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.materialIcon
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
@@ -73,6 +77,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -201,13 +206,15 @@ fun BottomNavigationBar(navController: NavHostController, selectedScreen: Screen
         NavigationBarItem(
             selected = (selectedScreen == Screen.Second),
             onClick = { navController.navigate(Screen.Second.route) },
-            icon = { Icon(imageVector = Icons.Default.DateRange, contentDescription = "", tint = MaterialTheme.colorScheme.onPrimary) })
+            icon = { Icon(imageVector = Icons.Default.AccountTree, contentDescription = "", tint = MaterialTheme.colorScheme.onPrimary) })
 
 
         NavigationBarItem(
             selected = (selectedScreen == Screen.Third),
             onClick = { navController.navigate(Screen.Third.route) },
-            icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "", tint = MaterialTheme.colorScheme.onPrimary) })
+            icon = { Icon(imageVector = Icons.Default.List, contentDescription = "", tint = MaterialTheme.colorScheme.onPrimary) }
+
+        )
 
     }
 }
@@ -1382,7 +1389,7 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                         onValueChange = { newText ->
                             assignmentName = newText
                         },
-                        label = { Text(text = "ass Name") }
+                        label = { Text(text = "Assignment Name") }
                     )
 
                     OutlinedTextField(
@@ -1430,7 +1437,7 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                         onValueChange = {
                                 newText -> noteName = newText
                         },
-                        label = { Text(text = "NoteName") }
+                        label = { Text(text = "Note Name") }
                     )
                     OutlinedTextField(
                         modifier = Modifier
@@ -1445,7 +1452,7 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                         onValueChange = {
                                 newText -> noteDesc = newText
                         },
-                        label = { Text(text = "NoteDesc") }
+                        label = { Text(text = "Note Description") }
                     )
                 }else if(state.value.currentAdding == "Exam") {
 
@@ -1462,7 +1469,7 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                         onValueChange = { newText ->
                             examName = newText
                         },
-                        label = { Text(text = "ExamName") }
+                        label = { Text(text = "Exam Name") }
                     )
                     OutlinedTextField(
                         modifier = Modifier
@@ -1477,7 +1484,7 @@ fun displayAddingPage(mainViewModel: MainViewModel, navController: NavHostContro
                         onValueChange = { newText ->
                             if (newText.text.length <= 15) examDate = newText
                         },
-                        label = { Text(text = "ExamDate") }
+                        label = { Text(text = "Exam Date") }
                     )
                 }
 
@@ -1680,7 +1687,7 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
                         onValueChange = { newText ->
                             assignmentName = newText
                         },
-                        label = { Text(text = "ass Name") },
+                        label = { Text(text = "Assignment Name") },
 
                     )
 
@@ -1732,7 +1739,7 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
                         onValueChange = {
                                 newText -> noteName = newText
                         },
-                        label = { Text(text = "NoteName") }
+                        label = { Text(text = "Note Name") }
                     )
                     OutlinedTextField(
                         modifier = Modifier
@@ -1747,7 +1754,7 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
                         onValueChange = {
                                 newText -> noteDesc = newText
                         },
-                        label = { Text(text = "NoteDesc") }
+                        label = { Text(text = "Note Description") }
                     )
                 }else if(state.value.currentEdit == "Exam") {
 
@@ -1764,7 +1771,7 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
                         onValueChange = { newText ->
                             examName = newText
                         },
-                        label = { Text(text = "ExamName") }
+                        label = { Text(text = "Exam Name") }
                     )
                     OutlinedTextField(
                         modifier = Modifier
@@ -1779,7 +1786,7 @@ fun displayEditPage(mainViewModel: MainViewModel, navController: NavHostControll
                         onValueChange = { newText ->
                             if (newText.text.length <= 15) examDate = newText
                         },
-                        label = { Text(text = "ExamDate") }
+                        label = { Text(text = "Exam Date") }
                     )
                 }
 
